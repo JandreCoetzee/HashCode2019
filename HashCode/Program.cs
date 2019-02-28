@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using MathNet.Numerics.LinearAlgebra;
+
 
 namespace HashCode
 {
@@ -17,11 +16,18 @@ namespace HashCode
 
             var data = ReadFromFile("c_memorable_moments.txt");
 
+            var verticalSlides = VerticalPhotos(data.PhotosV).ToList();
+            var horizontalSlides = HorizontalPhotos(data.PhotosH);
+
+           // var horizontalSlides = data.PhotosH.Select(x => new Slide(){ Ids = new List<int>() { x.Id }, Tags = x.Tags }).ToList();
 
 
-           // WriteToFile(data);
+            var slides = verticalSlides;
+            slides.AddRange(horizontalSlides);
 
-           // Console.ReadLine();
+            WriteToFile(slides);
+
+            // Console.ReadLine();
         }
 
         public static GooglePhotos ReadFromFile(string fileName)
@@ -97,25 +103,113 @@ namespace HashCode
             return googlePhotos;
         }
 
-        public static void WriteToFile(string result)
+        public static void WriteToFile(List<Slide> slides)
         {
             using (var file = new StreamWriter(File.Create("result.txt")))
             {
-                file.WriteLine(result);
+                var totalSlides = slides.Count;
+
+                file.WriteLine(totalSlides);
+
+                foreach (var slide in slides)
+                {
+                    foreach (var id in slide.Ids)
+                    {
+                        file.Write(id + " ");
+                    }
+                    file.Write( "\n");
+                }
             }
         }
 
-        public static void VerticalPhotos(List<Photo> vs)
+        public static List<Slide> VerticalPhotos(List<Photo> vs)
         {
             var slides = new List<Slide>();
+            var noMatchPhoto = new List<Photo>();
 
-            //Photo targetPhoto = null;
-            //for (var i = 0; i < vs.Count; i++)
-            //{
-            //    targetPhoto = vs[i];
-            //    targetPhoto.Tags.in
-            //}
+            var counter = vs.Count;
+
+            while (counter != 0)
+            {
+               var targetPhoto = vs.First();
+                vs.RemoveAt(0);
+                var hasFoundMatch = false;
+                for (int i = 0; i < vs.Count; i++)
+                {
+                    if (targetPhoto.Tags.Intersect(vs[i].Tags).Any())
+                    {             
+                        var slide = new Slide()
+                        {
+                            Ids = new List<int> {targetPhoto.Id, vs[i].Id },
+                            Tags = targetPhoto.Tags.Union(vs[i].Tags).ToList()
+                        };
+                        slides.Add(slide);
+                        vs.RemoveAt(i);
+                        hasFoundMatch = true;
+                        break;
+                    }
+                }
+
+                if (!hasFoundMatch)
+                {
+                    noMatchPhoto.Add(targetPhoto);
+                }
+
+                counter = vs.Count;
+            }
+
+            return slides;
         }
+
+        public static List<Slide> HorizontalPhotos(List<Photo> hs)
+        {
+            var slides = new List<Slide>();
+            var noMatchPhoto = new List<Photo>();
+
+            var counter = hs.Count;
+
+            while (counter != 0)
+            {
+                var targetPhoto = hs.First();
+                hs.RemoveAt(0);
+                var hasFoundMatch = false;
+                for (int i = 0; i < hs.Count; i++)
+                {
+                    if (targetPhoto.Tags.Intersect(hs[i].Tags).Any())
+                    {
+                        var slideTarget = new Slide()
+                        {
+                            Ids = new List<int> { targetPhoto.Id},
+                            Tags = targetPhoto.Tags
+                        };
+                        slides.Add(slideTarget);
+
+                        var slideMatch = new Slide()
+                        {
+                            Ids = new List<int> { hs[i].Id },
+                            Tags = hs[i].Tags
+                        };
+                        slides.Add(slideMatch);
+                        hs.RemoveAt(i);
+                        hasFoundMatch = true;
+                        break;
+                    }
+                }
+
+                if (!hasFoundMatch)
+                {
+                    noMatchPhoto.Add(targetPhoto);
+                }
+
+                counter = hs.Count;
+            }
+
+            return slides;
+        }
+
+        //public List<Slide> MatchVerticalAndHorizontal(List<Slide> verticalSlides, List<Slide> horizontalSlides) 
+        //{
+        //}
     }
 
 
