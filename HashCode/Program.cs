@@ -14,16 +14,21 @@ namespace HashCode
             Console.WriteLine("========");
             Console.WriteLine();
 
-            var data = ReadFromFile("c_memorable_moments.txt");
+            var data = ReadFromFile("b_lovely_landscapes.txt");
 
             var verticalSlides = VerticalPhotos(data.PhotosV).ToList();
             var horizontalSlides = HorizontalPhotos(data.PhotosH);
 
-           // var horizontalSlides = data.PhotosH.Select(x => new Slide(){ Ids = new List<int>() { x.Id }, Tags = x.Tags }).ToList();
+            verticalSlides.AddRange(horizontalSlides);
+
+            var rnd = new Random();
+            var result = verticalSlides.OrderBy(item => rnd.Next()).ToList();
+
+            var slides = Match(result);
 
 
-            var slides = verticalSlides;
-            slides.AddRange(horizontalSlides);
+        //    var slides = verticalSlides;
+        //  slides.AddRange(horizontalSlides);
 
             WriteToFile(slides);
 
@@ -125,7 +130,7 @@ namespace HashCode
         public static List<Slide> VerticalPhotos(List<Photo> vs)
         {
             var slides = new List<Slide>();
-            var noMatchPhoto = new List<Photo>();
+           
 
             var counter = vs.Count;
 
@@ -133,7 +138,7 @@ namespace HashCode
             {
                var targetPhoto = vs.First();
                 vs.RemoveAt(0);
-                var hasFoundMatch = false;
+       
                 for (int i = 0; i < vs.Count; i++)
                 {
                     if (targetPhoto.Tags.Intersect(vs[i].Tags).Any())
@@ -145,15 +150,11 @@ namespace HashCode
                         };
                         slides.Add(slide);
                         vs.RemoveAt(i);
-                        hasFoundMatch = true;
+                     
                         break;
                     }
                 }
 
-                if (!hasFoundMatch)
-                {
-                    noMatchPhoto.Add(targetPhoto);
-                }
 
                 counter = vs.Count;
             }
@@ -164,7 +165,7 @@ namespace HashCode
         public static List<Slide> HorizontalPhotos(List<Photo> hs)
         {
             var slides = new List<Slide>();
-            var noMatchPhoto = new List<Photo>();
+     
 
             var counter = hs.Count;
 
@@ -172,7 +173,7 @@ namespace HashCode
             {
                 var targetPhoto = hs.First();
                 hs.RemoveAt(0);
-                var hasFoundMatch = false;
+          
                 for (int i = 0; i < hs.Count; i++)
                 {
                     if (targetPhoto.Tags.Intersect(hs[i].Tags).Any())
@@ -191,25 +192,63 @@ namespace HashCode
                         };
                         slides.Add(slideMatch);
                         hs.RemoveAt(i);
-                        hasFoundMatch = true;
+                      
                         break;
                     }
                 }
 
-                if (!hasFoundMatch)
-                {
-                    noMatchPhoto.Add(targetPhoto);
-                }
+      
 
                 counter = hs.Count;
+             //   Console.WriteLine(counter);
             }
 
             return slides;
         }
 
-        //public List<Slide> MatchVerticalAndHorizontal(List<Slide> verticalSlides, List<Slide> horizontalSlides) 
-        //{
-        //}
+        public static List<Slide> Match(List<Slide> hs)
+        {
+            var slides = new List<Slide>();
+           
+            var counter = hs.Count;
+
+            while (counter != 0)
+            {
+                var targetPhoto = hs.First();
+                hs.RemoveAt(0);
+              
+                for (int i = 0; i < hs.Count; i++)
+                {
+                    if (targetPhoto.Tags.Intersect(hs[i].Tags).Any())
+                    {
+
+                        var slideTarget = new Slide()
+                        {
+                            Ids = targetPhoto.Ids,
+                            Tags = targetPhoto.Tags
+                        };
+                        slides.Add(slideTarget);
+
+                        var slideMatch = new Slide()
+                        {
+                            Ids = hs[i].Ids,
+                            Tags = hs[i].Tags
+                        };
+                        slides.Add(slideMatch);
+                        hs.RemoveAt(i);
+                    
+                        break;
+                    }
+                }
+
+       
+
+                counter = hs.Count;
+                //   Console.WriteLine(counter);
+            }
+
+            return slides;
+        }
     }
 
 
